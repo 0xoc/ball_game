@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BallGame</string>
+    <string name="title_activity_lost">Lost</string>
+</resources>
