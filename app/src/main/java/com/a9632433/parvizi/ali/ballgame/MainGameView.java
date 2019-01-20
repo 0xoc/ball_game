@@ -6,10 +6,15 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 public class MainGameView extends View {
@@ -18,22 +23,71 @@ public class MainGameView extends View {
     private int N;
     public int score = 0;
     public boolean gameStarted = false;
+    int timeElapsed = 0;
+    RandomBall player;
 
     private static Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    boolean playerPicked = false;
 
     public MainGameView(Context context, int n) {
         super(context);
         N = n;
 
-        float minSpeed = -5.0f;
-        float speedScale = 20.0f;
-        float minRadius = 50.0f;
-        float radiusScale = 20.0f;
+        float minSpeed = 1.0f;
+        float speedScale = 5.0f;
+        float minRadius = 30.0f;
+        float radiusScale = 50.0f;
+
 
         for (int i = 0 ; i < N ;i ++){
             balls.add(new RandomBall(speedScale, minSpeed, radiusScale, minRadius));
         }
 
+        player = new RandomBall(0.0f, 0.0f, 1.0f, 120.0f);
+        player.isPlayer = true;
+        balls.add(player);
+
+        N = balls.size();
+        Timer t = new Timer();
+        t.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                timeElapsed ++;
+                if (timeElapsed % 5 == 0){
+                    player.color = new ARGBColor();
+                }
+
+                if (gameStarted)
+                    score++;
+            }
+        },0,1000);
+
+        OnTouchListener listener = new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gameStarted = true;
+
+                if (playerPicked){
+                    player.x = event.getX();
+                    player.y = event.getY();
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+
+                    if (isSelected(event.getX(), event.getY(), player))
+                        playerPicked = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP)
+                    playerPicked = false;
+
+                return true;
+            }
+        };
+        setOnTouchListener(listener);
+    }
+
+    boolean isSelected(float x, float y, RandomBall ball){
+        float distance = (float) sqrt(pow(ball.x - x,2) + pow(ball.y - y, 2));
+        return (distance < ball.radius);
     }
 
     @Override
@@ -42,22 +96,29 @@ public class MainGameView extends View {
 
         if (firstTime){
             firstTime = false;
-            for (int i = 0 ;i < N;i++){
+            for (int i = 0 ;i < N;i++)
                 balls.get(i).init(getWidth(), getHeight());
-            }
+            player.init(getWidth(), getHeight());
         }
 
         // draw each ball
-        for (int i = 0 ; i < N ;i ++){
+        for (int i = 0 ; i < balls.size() ;i ++){
             RandomBall ball = balls.get(i);
             paint.setARGB(ball.color.a, ball.color.r, ball.color.g, ball.color.b);
             canvas.drawCircle(ball.x, ball.y, ball.radius, paint);
+
+            // draw player
+            if (ball.isPlayer) {
+                paint.setARGB(ball.color.a, ball.color.r, ball.color.g, ball.color.b);
+                canvas.drawCircle(ball.x, ball.y, ball.radius, paint);
+
+                paint.setColor(Color.WHITE);
+                paint.setTextSize(60);
+                canvas.drawText("PLAYER", ball.x - ball.radius + 10, ball.y + ball.radius / 4, paint);
+            }
         }
 
-        invalidate();
-    }
 
-    public void reflectBalls(){
         ArrayList<BallPair> collide = new ArrayList<BallPair>();
 
         // set balls reflection
@@ -71,15 +132,28 @@ public class MainGameView extends View {
                     float radiusDistance = (firstBall.radius + secondBall.radius) * (firstBall.radius + secondBall.radius);
                     if (centersDistance <= radiusDistance){
 
+
+                        float directionX = (firstBall.x - secondBall.x) / (float) sqrt(centersDistance);
+                        float directionY = (firstBall.y - secondBall.y) / (float) sqrt(centersDistance);
+                        float fDistance = (float)sqrt(centersDistance);
+                        float overLap = (fDistance- firstBall.radius - secondBall.radius) * 0.5f;
+
+                        firstBall.x -= overLap * directionX;
+                        firstBall.y -= overLap * directionY;
+
+                        secondBall.x += overLap * directionX;
+                        secondBall.y += overLap * directionY;
+
                         if (firstBall.isPlayer){
                             if (!gameStarted)
                                 continue;
                             if (secondBall.color.equals(firstBall.color)){
-                                //Toast.makeText(getContext(), "fuckersss", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getContext(), "same color", Toast.LENGTH_LONG).show();
                                 balls.remove(secondBall);
                                 score += 5;
                                 continue;
                             } else {
+                                Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(getContext(), Lost.class);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                 getContext().startActivity(intent);
@@ -87,19 +161,8 @@ public class MainGameView extends View {
                             }
                         }
 
-                        float directionX = (firstBall.x - secondBall.x) / (float) sqrt(centersDistance);
-                        float directionY = (firstBall.y - secondBall.y) / (float) sqrt(centersDistance);
-                        float fDistance = (float)sqrt(centersDistance);
-                        float overLap = (fDistance- firstBall.radius - secondBall.radius) * 0.5f;
-
                         collide.add(new BallPair(firstBall, secondBall));
 
-
-                        firstBall.x -= overLap * directionX;
-                        firstBall.y -= overLap * directionY;
-
-                        secondBall.x += overLap * directionX;
-                        secondBall.y += overLap * directionY;
                     }
                 }
             }
@@ -144,13 +207,14 @@ public class MainGameView extends View {
             secondBall.dx = tx * dpTan2 + nx * m2;
             secondBall.dy = ty * dpTan2 + ny * m2;
         }
+        player.boundaryCheck();
+        invalidate();
     }
 
     @Override
     public void invalidate() {
         super.invalidate();
-        reflectBalls();
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < balls.size(); i++) {
             RandomBall ball = balls.get(i);
             if (!ball.isPlayer)
                 ball.move();

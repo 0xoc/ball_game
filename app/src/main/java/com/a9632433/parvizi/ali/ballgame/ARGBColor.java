@@ -24,4 +24,14 @@ public class ARGBColor {
         this.b = b;
         this.a = a;
     }
+
+    public boolean equals(ARGBColor other) {
+        boolean isSame = true;
+        isSame &= (other.a == this.a);
+        isSame &= (other.r == this.r);
+        isSame &= (other.g == this.g);
+        isSame &= (other.b == this.b);
+
+        return isSame;
+    }
 }

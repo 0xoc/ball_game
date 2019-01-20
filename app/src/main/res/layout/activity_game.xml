@@ -5,12 +5,50 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".GameActivity">
+    tools:context=".GameActivity"
+    android:background="#00204a"
+    >
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/gameContainer">
-</LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.10"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="match_parent"
+            android:background="#005792"
+            >
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.75"
+                android:text="SCORE"
+                android:textColor="#fff"
+                android:textSize="40sp"
+                android:gravity="center"
+                android:background="@drawable/right_round_orange"
+                />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:textSize="40sp"
+                android:text="26"
+                android:id="@+id/score"
+                android:layout_weight="0.25"
+                android:textColor="#fff"
+                android:gravity="center"
+                />
+        </LinearLayout>
+    </FrameLayout>
+        
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/gameContainer"
+        android:layout_weight="0.85">
+    </FrameLayout>
 
 </LinearLayout>

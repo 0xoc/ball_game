@@ -22,13 +22,14 @@ public class RandomBall {
     public float screenWidth;
     public float screenHeight;
 
-    public static Random rnd = new Random();
 
     public boolean isPlayer = false;
     ARGBColor color;
 
 
     public void init(float screenWidth, float screenHeigh){
+        Random rnd = new Random();
+
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeigh;
 
@@ -38,7 +39,7 @@ public class RandomBall {
 
 
         // initial randomly
-        this.dx = rnd.nextFloat() * this.speedScale + this.minSpeed;
+        this.dx = this.speedScale * this.minSpeed;
         this.dy = rnd.nextFloat() * this.speedScale + this.minSpeed;
         this.radius = rnd.nextFloat() * this.radiusScale + this.minRadius;
 
@@ -57,7 +58,7 @@ public class RandomBall {
 
     public RandomBall(){ id = count++; }
 
-    private void boundaryCheck(){
+    public void boundaryCheck(){
         // handle left and right
         if (this.x + this.radius >= screenWidth){
             this.x = screenWidth - this.radius;
