@@ -7,6 +7,7 @@
     android:orientation="vertical"
     tools:context=".GameActivity"
     android:background="#00204a"
+    android:id="@+id/mainRoot"
     >
 
 

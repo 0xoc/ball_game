@@ -1,223 +1,273 @@
 package com.a9632433.parvizi.ali.ballgame;
-
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
+import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
+import static java.lang.System.exit;
 
 public class MainGameView extends View {
-    private ArrayList<RandomBall> balls = new ArrayList<>();
-    private boolean firstTime = true;
-    private int N;
-    public int score = 0;
-    public boolean gameStarted = false;
-    int timeElapsed = 0;
+
+    // all balls
+    ArrayList<RandomBall> balls = new ArrayList<>();
+    ArrayList<BallPair> collideBalls = new ArrayList<>();
     RandomBall player;
 
-    private static Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    boolean playerPicked = false;
+    // paint to draw
+    Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    public MainGameView(Context context, int n) {
+    private int noBalls;                        // number of initial balls
+
+    private int level;                          // game level
+    private int score;                          // current score
+
+    private boolean gameStarted = false;        // indicates whether the game is started or not
+    private boolean gameEnded = false;          // indicates whether the game ended or not (won level or lost)
+    private boolean finalStatus;                // true: game won | false: game lost
+
+    private int elapsedTime = 0;                // elapsed time since the creation of the view
+
+    private boolean playerSelected = false;     // indicates whether the player is selected or not
+
+    private boolean newGame = true;             // if it's a new game or a saved game
+
+    public MainGameView(Context context, int noBalls, int level) {
         super(context);
-        N = n;
+        this.noBalls = noBalls;
+        this.level = level;
+        init();
+    }
 
-        float minSpeed = 1.0f;
-        float speedScale = 5.0f;
-        float minRadius = 30.0f;
-        float radiusScale = 50.0f;
+    // main game initializer
+    private void init(){
 
-
-        for (int i = 0 ; i < N ;i ++){
-            balls.add(new RandomBall(speedScale, minSpeed, radiusScale, minRadius));
-        }
-
-        player = new RandomBall(0.0f, 0.0f, 1.0f, 120.0f);
-        player.isPlayer = true;
-        balls.add(player);
-
-        N = balls.size();
-        Timer t = new Timer();
-        t.scheduleAtFixedRate(new TimerTask() {
+        // main game timer (tracks the time second by second)
+        Timer mainTimer = new Timer();
+        mainTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                timeElapsed ++;
-                if (timeElapsed % 5 == 0){
-                    player.color = new ARGBColor();
-                }
-
-                if (gameStarted)
-                    score++;
+                periodicStateManager();
             }
-        },0,1000);
+        }, 0,1000);
 
-        OnTouchListener listener = new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                gameStarted = true;
+        // main view touch listener
+        setOnTouchListener(mainTouchListener);
 
-                if (playerPicked){
-                    player.x = event.getX();
-                    player.y = event.getY();
-                }
-
-                if (event.getAction() == MotionEvent.ACTION_DOWN){
-
-                    if (isSelected(event.getX(), event.getY(), player))
-                        playerPicked = true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP)
-                    playerPicked = false;
-
-                return true;
-            }
-        };
-        setOnTouchListener(listener);
+        // used to get width and height
+        addOnLayoutChangeListener(layoutChangeListener);
     }
 
-    boolean isSelected(float x, float y, RandomBall ball){
-        float distance = (float) sqrt(pow(ball.x - x,2) + pow(ball.y - y, 2));
-        return (distance < ball.radius);
+    private boolean isBallSelected(float x, float y, RandomBall ball){
+        float distance = (float) sqrt(pow(x - ball.x, 2) + pow(y-ball.y,2));
+        return (distance <= ball.radius );
     }
 
+    // main view touch listener
+    OnTouchListener mainTouchListener = new OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+
+            // start the game as soon as the player touches the screen
+            gameStarted = true;
+
+            // if player is selected move it
+            if (playerSelected){
+                player.x = event.getX();
+                player.y = event.getY();
+            }
+
+            if (event.getAction() == MotionEvent.ACTION_DOWN){
+                if (isBallSelected(event.getX(), event.getY(), player)) // select the player
+                    playerSelected = true;
+            } else if (event.getAction() == MotionEvent.ACTION_DOWN)    // deselect the player
+                playerSelected = false;
+
+            return true;
+        }
+    };
+
+
+    // executes every second by the timer
+    private void periodicStateManager(){
+        elapsedTime++;
+
+        if (gameStarted && !gameEnded)
+            score++;
+
+        // randomly change players color every 5 seconds
+        if (elapsedTime%5 == 0)
+            player.color = new ARGBColor();
+    }
+
+    // initializer of random balls
+    private void initRandomBalls() throws Exception{
+        RandomBall.initCanvasDimensions(getWidth(), getHeight());
+
+        // generate noBalls random balls
+        for (int i = 0; i < noBalls; i++)
+            balls.add(new RandomBall());
+    }
+
+    // player initializer
+    private void initPlayer() throws Exception{
+
+        // generate the player
+        player = new RandomBall();
+        player.isPlayer = true;
+        player.radius = 100.0f;
+        player.dx = 0; player.dy = 0;
+
+        balls.add(player);
+    }
+
+    // used to make sure getWidth and getHeight work correctly
+    OnLayoutChangeListener layoutChangeListener = new OnLayoutChangeListener() {
+        @Override
+        public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            // at this point width and height of the canvas are knows
+            // therefor we can initialize random balls
+            if (newGame) {
+                try {
+                    initRandomBalls();
+                    initPlayer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    exit(-1);
+                }
+            }
+            // will not be needed any more
+            removeOnLayoutChangeListener(layoutChangeListener);
+        }
+    };
+
+    @SuppressLint("DrawAllocation")
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (firstTime){
-            firstTime = false;
-            for (int i = 0 ;i < N;i++)
-                balls.get(i).init(getWidth(), getHeight());
-            player.init(getWidth(), getHeight());
-        }
+        // empty the collideBall array list
+        collideBalls.clear();
 
-        // draw each ball
-        for (int i = 0 ; i < balls.size() ;i ++){
+        for (int i = 0 ;i < balls.size() ; i++){
             RandomBall ball = balls.get(i);
+
+            /*
+                move the ball according to its velocity
+                and then check the screen boundaries
+            */
+
+            if (!ball.isPlayer) {   // move the ball only if it's not the player
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+            }
+
+
+            // check X axis
+            if (ball.x + ball.radius >= getWidth()) {ball.x = getWidth() - ball.radius; ball.dx *= -1; }
+            else if (ball.x - ball.radius <=0 ) { ball.x = ball.radius; ball.dx *= -1; }
+
+            // check Y axis
+            if (ball.y + ball.radius >= getHeight() ) {ball.y = getHeight() - ball.radius; ball.dy *= -1;}
+            else if (ball.y - ball.radius <= 0) {ball.y = ball.radius; ball.dy *= -1; }
+
+
+            // set the paint color to the balls color
             paint.setARGB(ball.color.a, ball.color.r, ball.color.g, ball.color.b);
             canvas.drawCircle(ball.x, ball.y, ball.radius, paint);
 
-            // draw player
-            if (ball.isPlayer) {
-                paint.setARGB(ball.color.a, ball.color.r, ball.color.g, ball.color.b);
-                canvas.drawCircle(ball.x, ball.y, ball.radius, paint);
-
-                paint.setColor(Color.WHITE);
-                paint.setTextSize(60);
-                canvas.drawText("PLAYER", ball.x - ball.radius + 10, ball.y + ball.radius / 4, paint);
-            }
         }
 
+        // detect ball collisions
+        for (int i = 0 ;i < balls.size() ; i++) {
+            RandomBall firstBall = balls.get(i);            // reference to the first ball
 
-        ArrayList<BallPair> collide = new ArrayList<BallPair>();
+            for (int j = 0 ; j < balls.size() ; j ++){
+                RandomBall secondBall = balls.get(j);       // reference to the second ball
 
-        // set balls reflection
-        for (int i = 0 ; i < balls.size() ; i++) {
-            RandomBall firstBall = balls.get(i);
-            for (int j = 0 ; j < balls.size() ; j++) {
-                RandomBall secondBall = balls.get(j);
+                if (firstBall.id == secondBall.id)          // continue if the two balls are the same
+                    continue;
 
-                if (firstBall.id != secondBall.id){
-                    float centersDistance = (firstBall.x - secondBall.x) * (firstBall.x - secondBall.x) + (firstBall.y - secondBall.y) * (firstBall.y - secondBall.y);
-                    float radiusDistance = (firstBall.radius + secondBall.radius) * (firstBall.radius + secondBall.radius);
-                    if (centersDistance <= radiusDistance){
+                // distance of the centers of the two balls
+                float centerDistance = (float) sqrt(pow(firstBall.x - secondBall.x,2) + pow(firstBall.y - secondBall.y,2));
+                float tangentDistance = firstBall.radius + secondBall.radius;
+                float overLap = tangentDistance - centerDistance;
 
+                if (overLap >= 0) { // if the two ball collide
+                    // move them apart just so enough that they don't collide any more
 
-                        float directionX = (firstBall.x - secondBall.x) / (float) sqrt(centersDistance);
-                        float directionY = (firstBall.y - secondBall.y) / (float) sqrt(centersDistance);
-                        float fDistance = (float)sqrt(centersDistance);
-                        float overLap = (fDistance- firstBall.radius - secondBall.radius) * 0.5f;
+                    if (firstBall.isPlayer && gameStarted){    // if is player and game started check if it lost or won
+                        if (firstBall.color.equals(secondBall.color)) {  // the player won
+                            Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
 
-                        firstBall.x -= overLap * directionX;
-                        firstBall.y -= overLap * directionY;
+                            // Vibrate for 100 milliseconds
+                            v.vibrate(100);
 
-                        secondBall.x += overLap * directionX;
-                        secondBall.y += overLap * directionY;
+                            score += 5;
+                            balls.remove(secondBall);   // remove the second ball
+                        } else {    // the player lost
+                            gameEnded = true;
+                            finalStatus = false;
 
-                        if (firstBall.isPlayer){
-                            if (!gameStarted)
-                                continue;
-                            if (secondBall.color.equals(firstBall.color)){
-                                Toast.makeText(getContext(), "same color", Toast.LENGTH_LONG).show();
-                                balls.remove(secondBall);
-                                score += 5;
-                                continue;
-                            } else {
-                                Toast.makeText(getContext(), "lost", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(getContext(), Lost.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                getContext().startActivity(intent);
-                                ((Activity) getContext()).finish();
-                            }
+                            MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.zapsplat_multimedia_game_incorrect_buzz_tone_001_26397);
+                            mp.start();
                         }
-
-                        collide.add(new BallPair(firstBall, secondBall));
-
                     }
+
+                    float ddX = (float) (0.5 * overLap * (firstBall.x  - secondBall.x) / centerDistance);
+                    float ddY = (float) (0.5 * overLap * (firstBall.y  - secondBall.y) / centerDistance);
+
+                    // move the first ball away
+                    firstBall.x += ddX; firstBall.y += ddY;
+
+                    // move the second ball away
+                    secondBall.x -= ddX; secondBall.y -= ddY;
+
+                    // add the two balls to collide balls array list to be processed later
+                    collideBalls.add(new BallPair(firstBall, secondBall));
+
                 }
             }
         }
 
-        for (int i = 0 ;i < collide.size(); i++){
+        // resolve ball collisions
+        for (int i = 0 ; i < collideBalls.size() ; i ++){
+            RandomBall firstBall = collideBalls.get(i).firstBall;
+            RandomBall secondBall = collideBalls.get(i).secondBall;
 
-            RandomBall firstBall = collide.get(i).firstBall;
-            RandomBall secondBall = collide.get(i).secondBall;
+            float centerDistance = (float) sqrt(pow(firstBall.x - secondBall.x,2) + pow(firstBall.y - secondBall.y,2));
 
-            float centersDistance = (firstBall.x - secondBall.x) * (firstBall.x - secondBall.x) + (firstBall.y - secondBall.y) * (firstBall.y - secondBall.y);
-            float radiusDistance = (firstBall.radius + secondBall.radius) * (firstBall.radius + secondBall.radius);
-            float fDistance = (float)sqrt(centersDistance);
+            // adjust new velocities
+            float nx = (secondBall.x - firstBall.x) / centerDistance;
+            float ny = (secondBall.y - firstBall.y) / centerDistance;
 
-            // Normal
-            float nx = (firstBall.x - secondBall.x) / fDistance;
-            float ny = (firstBall.y - secondBall.y) / fDistance;
-
-            // Tangent
-            float tx = - ny;
-            float ty = nx;
-
-            // dot product tangent
-            float dpTan1 = firstBall.dx * tx + firstBall.dy * ty;
-            float dpTan2 = secondBall.dx * tx + secondBall.dy* ty;
-
-            // dot product normal
-
-            float dpNorm1 = firstBall.dx * nx + firstBall.dy * ny;
-            float dpNorm2 = secondBall.dx * nx + secondBall.dy * ny;
-
-            // conservation of momentum
-
-            float m1 = (dpNorm1 * (firstBall.radius - secondBall.radius) + 2.0f * secondBall.radius * dpNorm2) / (firstBall.radius + secondBall.radius);
-            float m2 = (dpNorm2 * (secondBall.radius - firstBall.radius) + 2.0f * firstBall.radius * dpNorm1)/ (firstBall.radius + secondBall.radius);
-
-            // update ball speed
-
-            firstBall.dx = tx * dpTan1 + nx*m1;
-            firstBall.dy = ty * dpTan1 + ny*m1;
-
-            secondBall.dx = tx * dpTan2 + nx * m2;
-            secondBall.dy = ty * dpTan2 + ny * m2;
+            // a physics formula for ball reflection
+            float kx = (firstBall.dx - secondBall.dx);
+            float ky = (firstBall.dy - secondBall.dy);
+            float p = (float) (2.0 * (nx * kx + ny * ky) / (firstBall.mass + secondBall.mass));
+            firstBall.dx = firstBall.dx - p * secondBall.mass * nx;
+            firstBall.dy = firstBall.dy - p * secondBall.mass * ny;
+            secondBall.dx = secondBall.dx + p * firstBall.mass * nx;
+            secondBall.dy = secondBall.dy + p * firstBall.mass * ny;
         }
-        player.boundaryCheck();
-        invalidate();
+
+        if (!gameEnded)
+            invalidate();
     }
 
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        for (int i = 0; i < balls.size(); i++) {
-            RandomBall ball = balls.get(i);
-            if (!ball.isPlayer)
-                ball.move();
-        }
-    }
+    public int getScore() {return score;}
+    public boolean isGameEnded() {return gameEnded;}
+    public boolean getFinalStatus() {return finalStatus; }
 }

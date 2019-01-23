@@ -17,6 +17,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".Lost"></activity>
+
+
     </application>
 
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

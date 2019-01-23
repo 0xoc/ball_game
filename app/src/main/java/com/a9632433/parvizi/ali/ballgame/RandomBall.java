@@ -1,96 +1,79 @@
 package com.a9632433.parvizi.ali.ballgame;
 
+import android.widget.Toast;
+
 import java.util.Random;
 
 public class RandomBall {
-
+    private static int _id;
     public int id;
-    private static int count = 0;
 
+    // indicates whether this ball is the player
+    public boolean isPlayer = false;
+
+    /*
+        canvas width and height
+        needs to be initialized by the parent view once
+        and all the balls use it
+    */
+
+    private static float _canvasWidth;
+    private static float _canvasHeight;
+
+    // indicates whether canvas with and height are initialized
+    private static boolean isInitialized = false;
+
+    // position
     public float x;
     public float y;
 
+    // velocity
     public float dx;
     public float dy;
-    public float speedScale;
-    public float minSpeed;
 
-    public float radius;
-    public float radiusScale;
-    public float minRadius;
-
-    public float screenWidth;
-    public float screenHeight;
-
-
-    public boolean isPlayer = false;
+    // color of the ball
     ARGBColor color;
 
+    // scalars
+    public float radius = 50.0f;
+    public float mass = 10.0f;
 
-    public void init(float screenWidth, float screenHeigh){
-        Random rnd = new Random();
+    // minimum initial speed
+    public static float minSpeed = 2.0f;
 
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeigh;
+    // helpers
 
-        // set random x and y
-        this.x = rnd.nextInt( (int) screenWidth);
-        this.y = rnd.nextInt(( int) screenHeigh );
+    // Random object used through out the code
+    public static Random rnd = new Random();
+    public static float speedScaleFactor = 5;
+
+    // initializer for the canvas width and height
+    public static void initCanvasDimensions(float canvasWidth, float canvasHeight){
+        _canvasWidth = canvasWidth;
+        _canvasHeight = canvasHeight;
+        isInitialized = true;
+    }
 
 
-        // initial randomly
-        this.dx = this.speedScale * this.minSpeed;
-        this.dy = rnd.nextFloat() * this.speedScale + this.minSpeed;
-        this.radius = rnd.nextFloat() * this.radiusScale + this.minRadius;
+    // generates random position, velocity and color
+    public RandomBall() throws Exception{
+        if (!isInitialized)
+            throw new Exception("Canvas Width And Height Not Initialized");
+
+        // set ball id
+        _id++;
+        id = _id;
+
+        // position
+        x = rnd.nextInt((int) _canvasWidth);
+        y = rnd.nextInt((int) _canvasHeight);
+
+        // velocity
+
+        dx = rnd.nextFloat()  * speedScaleFactor + minSpeed;
+        dy = rnd.nextFloat()  * speedScaleFactor + minSpeed;
 
         // color
-        this.color = new ARGBColor();
-    }
-
-    public RandomBall(float speedScale, float minSpeed, float radiusScale, float minRadius) {
-        this.speedScale = speedScale;
-        this.minSpeed = minSpeed;
-        this.radiusScale = radiusScale;
-        this.minRadius = minRadius;
-
-        id = count++;
-    }
-
-    public RandomBall(){ id = count++; }
-
-    public void boundaryCheck(){
-        // handle left and right
-        if (this.x + this.radius >= screenWidth){
-            this.x = screenWidth - this.radius;
-            this.dx = - this.dx;
-        } else if (this.x - this.radius <= 0){
-            this.x = this.radius;
-            this.dx = -this.dx;
-        }
-
-        // handle top and bottom
-        if (this.y + this.radius >= screenHeight){
-            this.y = screenHeight - this.radius;
-            this.dy = - this.dy;
-        } else if (this.y - this.radius <= 0){
-            this.y = this.radius;
-            this.dy = -this.dy;
-        }
-    }
-
-    public void move(){
-        // update x and y
-        this.x += this.dx;
-        this.y += this.dy;
-
-        boundaryCheck();
-
-    }
-
-    public void move(float x, float y){
-        this.x = x;
-        this.y = y;
-
-        boundaryCheck();
+        color = new ARGBColor();
     }
 }
