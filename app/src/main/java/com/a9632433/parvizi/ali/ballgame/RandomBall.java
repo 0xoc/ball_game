@@ -2,9 +2,10 @@ package com.a9632433.parvizi.ali.ballgame;
 
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.util.Random;
 
-public class RandomBall {
+public class RandomBall implements Serializable {
     private static int _id;
     public int id;
 

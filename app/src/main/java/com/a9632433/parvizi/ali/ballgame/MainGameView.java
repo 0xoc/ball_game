@@ -7,11 +7,9 @@ import android.media.MediaPlayer;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
-import java.sql.Time;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,7 +17,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.System.exit;
 
-public class MainGameView extends View {
+public class MainGameView extends View implements Serializable {
 
     // all balls
     ArrayList<RandomBall> balls = new ArrayList<>();
@@ -27,7 +25,7 @@ public class MainGameView extends View {
     RandomBall player;
 
     // paint to draw
-    Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    static Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private int noBalls;                        // number of initial balls
 
@@ -44,11 +42,49 @@ public class MainGameView extends View {
 
     private boolean newGame = true;             // if it's a new game or a saved game
 
+
+    private Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+
     public MainGameView(Context context, int noBalls, int level) {
         super(context);
         this.noBalls = noBalls;
         this.level = level;
         init();
+    }
+
+    public MainGameView(Context context, GameState gameState){
+        super(context);
+         noBalls = gameState.noBalls;
+         level = gameState.level;
+         score = gameState.score;
+         gameStarted = false;
+         gameEnded = gameState.gameEnded;
+         finalStatus = gameState.finalStatus;
+         elapsedTime = gameState.elapsedTime;
+         playerSelected = false;
+         newGame = false;
+         balls =gameState.balls;
+         collideBalls = gameState.collideBalls;
+         player = gameState.player;
+         init();
+    }
+
+    public GameState getGameState(){
+        // save the game state
+        GameState state = new GameState(
+                balls,
+                collideBalls,
+                player,
+                noBalls,
+                level,
+                score,
+                gameStarted,
+                gameEnded,
+                finalStatus,
+                elapsedTime,
+                false,
+                false);
+        return state;
     }
 
     // main game initializer
@@ -210,7 +246,6 @@ public class MainGameView extends View {
 
                     if (firstBall.isPlayer && gameStarted){    // if is player and game started check if it lost or won
                         if (firstBall.color.equals(secondBall.color)) {  // the player won
-                            Vibrator v = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
 
                             // Vibrate for 100 milliseconds
                             v.vibrate(100);
@@ -220,7 +255,7 @@ public class MainGameView extends View {
                         } else {    // the player lost
                             gameEnded = true;
                             finalStatus = false;
-
+                            v.vibrate(300);
                             MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.zapsplat_multimedia_game_incorrect_buzz_tone_001_26397);
                             mp.start();
                         }
@@ -270,4 +305,6 @@ public class MainGameView extends View {
     public int getScore() {return score;}
     public boolean isGameEnded() {return gameEnded;}
     public boolean getFinalStatus() {return finalStatus; }
+
+
 }

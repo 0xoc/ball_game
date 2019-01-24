@@ -1,9 +1,10 @@
 package com.a9632433.parvizi.ali.ballgame;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class ARGBColor {
+public class ARGBColor implements Serializable {
 
     public static ArrayList<ARGBColor> colors;
 

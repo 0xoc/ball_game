@@ -3,6 +3,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:weightSum="1"
     >
 
     <FrameLayout
@@ -26,10 +27,13 @@
         android:layout_height="0dp"
         android:layout_weight="0.5"
         >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="2"/>
+
+        <ListView
+            android:id="@+id/hightScoreList"
+            android:layout_width="match_parent"
+            android:layout_marginRight="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_height="match_parent" />
     </FrameLayout>
 
     <FrameLayout
@@ -37,12 +41,30 @@
         android:layout_height="0dp"
         android:layout_weight="0.2"
         >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="4"
-            />
-
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:orientation="horizontal"
+            >
+            <ImageButton
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:src="@drawable/replay"
+                android:id="@+id/replayGameBtn"
+                android:background="@null"
+                android:layout_margin="10dp"
+                />
+            <ImageButton
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:background="@null"
+                android:src="@drawable/menu"
+                android:layout_margin="10dp"
+                />
+        </LinearLayout>
     </FrameLayout>
 
 </LinearLayout>

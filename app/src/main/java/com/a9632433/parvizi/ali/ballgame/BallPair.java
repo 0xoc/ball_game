@@ -1,6 +1,8 @@
 package com.a9632433.parvizi.ali.ballgame;
 
-public class BallPair {
+import java.io.Serializable;
+
+public class BallPair implements Serializable {
     public RandomBall firstBall;
     public RandomBall secondBall;
 
