@@ -13,12 +13,12 @@
             android:layout_width="match_parent"
             android:orientation="horizontal"
             android:layout_height="match_parent"
-            android:background="#005792"
+            android:background="#393e46"
             >
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.75"
+                android:layout_weight="0.50"
                 android:text="SCORE"
                 android:textColor="#fff"
                 android:textSize="40sp"
@@ -31,7 +31,18 @@
                 android:textSize="40sp"
                 android:text="26"
                 android:id="@+id/score"
-                android:layout_weight="0.25"
+                android:layout_weight="0.30"
+                android:textColor="#fff"
+                android:gravity="center"
+                />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:textSize="40sp"
+                android:text="26"
+                android:id="@+id/level"
+                android:background="#b55400"
+                android:layout_weight="0.20"
                 android:textColor="#fff"
                 android:gravity="center"
                 />

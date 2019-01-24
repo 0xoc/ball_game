@@ -26,7 +26,11 @@ public class GameState implements Serializable {
 
     public boolean newGame = true;
 
-    public GameState(ArrayList<RandomBall> balls, ArrayList<BallPair> collideBalls, RandomBall player, int noBalls, int level, int score, boolean gameStarted, boolean gameEnded, boolean finalStatus, int elapsedTime, boolean playerSelected, boolean newGame) {
+    public int topLevel;
+
+    public GameState(ArrayList<RandomBall> balls, ArrayList<BallPair> collideBalls, RandomBall player, int noBalls,
+                     int level, int score, boolean gameStarted, boolean gameEnded, boolean finalStatus, int elapsedTime,
+                     boolean playerSelected, boolean newGame, int topLevel) {
         this.balls = balls;
         this.collideBalls = collideBalls;
         this.player = player;
@@ -39,7 +43,7 @@ public class GameState implements Serializable {
         this.elapsedTime = elapsedTime;
         this.playerSelected = playerSelected;
         this.newGame = newGame;
+        this.topLevel = topLevel;
     }
-
 
 }

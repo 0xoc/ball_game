@@ -7,9 +7,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,36 +51,24 @@ public class GameActivity extends AppCompatActivity {
         // init layout inflater
         layoutInflater = getLayoutInflater();
 
-
-        createNewGameInstance(1);
     }
 
-    public void createNewGameInstance(int level){
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        // inflate the game layout
-        final View gameView = layoutInflater.inflate(R.layout.game_play_layout,root,false);
-
-
-
-        // add the game layout to the root layout
-        root.addView(gameView);
-
-        final FrameLayout gameContainer = gameView.findViewById(R.id.gameContainer);               // "game canvas"
-        final TextView score = gameView.findViewById(R.id.score);                                  // game score text view
-        //currentGame = new MainGameView(this,10,level);                              // a game instance
-
-
+        // load any previous game states
 
         try {
             FileInputStream fin = openFileInput("game.txt");
             ObjectInputStream iin = new ObjectInputStream(fin);
             GameState gameState = (GameState) iin.readObject();
-            Toast.makeText(getApplicationContext(), gameState.balls.size() +"", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), gameState.balls.size() +"", Toast.LENGTH_SHORT).show();
 
             currentGame = new MainGameView(getApplicationContext(), gameState);
             iin.close();
             fin.close();
-            Toast.makeText(getApplicationContext(), "Done loading", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Done loading | top: " +currentGame.getTopLevel(), Toast.LENGTH_SHORT).show();
 
         } catch (FileNotFoundException e) {
             Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_SHORT).show();
@@ -92,8 +83,111 @@ public class GameActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        // remove all sub views first
+        root.removeAllViews();
+        createGameLevelSelector();
+
+    }
+
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // save game state
+
+        if (currentGame == null)   // ignore if game ended or not initialized at all
+            return;
+
+        try {
+            FileOutputStream fout = openFileOutput("game.txt", Context.MODE_PRIVATE);
+            ObjectOutputStream oout = new ObjectOutputStream(fout);
+            oout.writeObject(currentGame.getGameState());
+            oout.close();
+            fout.close();
+            Toast.makeText(getApplicationContext(), "State Saved | top lavel: " + currentGame.getGameState().topLevel, Toast.LENGTH_SHORT).show();
+
+        } catch (FileNotFoundException e) {
+            Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        } catch (IOException e) {
+            Toast.makeText(getApplicationContext(), "IO exception", Toast.LENGTH_SHORT).show();
+
+            e.printStackTrace();
+        }
+    }
+
+    public void createGameLevelSelector(){
+        root.removeAllViews();
+
+        // inflate the level selector layout
+        final View levelSelectorView = layoutInflater.inflate(R.layout.game_level_selector, root, false);
+
+        // add it to the root
+        root.addView(levelSelectorView);
+
+        // top avalibale game level, 0 if no game
+        int topLevel = (currentGame == null)? 1 : currentGame.getTopLevel();
+        //Toast.makeText(getApplicationContext(), topLevel+ "", Toast.LENGTH_SHORT).show();
+
+        // create the level selector list adapter
+        ArrayAdapter adapter = new LevelSelectorListAdapter(getApplicationContext(),R.layout.level_select_item_layout, topLevel);
+
+        // handle to the list
+        ListView levelsList = levelSelectorView.findViewById(R.id.levelList);
+
+        // attach the adapter to it
+        levelsList.setAdapter(adapter);
+
+        levelsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // delete this view from root
+                root.removeView(levelSelectorView);
+
+                // start new game with the level
+                createNewGameInstance(position + 1);
+            }
+        });
+
+        ImageButton resumeGame = levelSelectorView.findViewById(R.id.resumeGameBtn);
+
+        resumeGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentGame == null || currentGame.isGameEnded())
+                    Toast.makeText(getApplicationContext(), "No ongoing game to resume", Toast.LENGTH_SHORT).show();
+                else {
+                    createNewGameInstance(-1);
+                }
+            }
+        });
+    }
+
+    public void createNewGameInstance(int level){
+        root.removeAllViews();
+
+        // inflate the game layout
+        final View gameView = layoutInflater.inflate(R.layout.game_play_layout,root,false);
+
+
+        // add the game layout to the root layout
+        root.addView(gameView);
+
+        final FrameLayout gameContainer = gameView.findViewById(R.id.gameContainer);               // "game canvas"
+        final TextView score = gameView.findViewById(R.id.score);                                  // game score text view
+
+        if (level != -1)
+            currentGame = new MainGameView(this,10,level);                              // a game instance
+
+
         // add the game to the game container
         gameContainer.addView(currentGame);
+
+        // set level text
+        TextView levelText = gameView.findViewById(R.id.level);
+
+        levelText.setText(currentGame.getLevel() + "");
 
         // update the score and check for any final result
         final Timer checker = new Timer();
@@ -112,23 +206,7 @@ public class GameActivity extends AppCompatActivity {
                             if (!currentGame.getFinalStatus()) {   // if player lost the game
                                 // remove this game instance
                                 root.removeView(gameView);
-//                                try {
-//                                    FileOutputStream fout = openFileOutput("game.txt", Context.MODE_PRIVATE);
-//                                    ObjectOutputStream oout = new ObjectOutputStream(fout);
-//                                    oout.writeObject(currentGame.getGameState());
-//                                    oout.close();
-//                                    fout.close();
-//                                    Toast.makeText(getApplicationContext(), "State Saved", Toast.LENGTH_SHORT).show();
 //
-//
-//                                } catch (FileNotFoundException e) {
-//                                    Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_SHORT).show();
-//                                    e.printStackTrace();
-//                                } catch (IOException e) {
-//                                    Toast.makeText(getApplicationContext(), "IO exception", Toast.LENGTH_SHORT).show();
-//
-//                                    e.printStackTrace();
-//                                }
                                 // cancel this timer
                                 checker.cancel();
 
@@ -149,17 +227,22 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void createLostPage(){
+        root.removeAllViews();
 
         // inflate the lost page
         final View lostPage = layoutInflater.inflate(R.layout.game_lost_layout,root,false);
         root.addView(lostPage);
 
         // current score in lost page
-        TextView currentScoreText = lostPage.findViewById(R.id.currentScoreLost);
+        final TextView currentScoreText = lostPage.findViewById(R.id.currentScoreLost);
         currentScoreText.setText(currentGame.getScore() + "");
 
         // replay button
         final ImageButton replayButton = lostPage.findViewById(R.id.replayGameBtn);
+
+        // menu button
+        final ImageButton showMenu = lostPage.findViewById(R.id.showLevelSelectBtn);
+
 
         replayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -171,7 +254,21 @@ public class GameActivity extends AppCompatActivity {
                 root.removeView(lostPage);
 
                 // create a new game instance
-                createNewGameInstance(1);
+                createNewGameInstance(currentGame.getLevel());
+            }
+        });
+
+        showMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // detach the click listener
+                showMenu.setOnClickListener(null);
+
+                // remove the lost page view
+                root.removeView(lostPage);
+
+                // create a new game instance
+                createGameLevelSelector();
             }
         });
 

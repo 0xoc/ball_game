@@ -61,6 +61,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="0.5"
                 android:background="@null"
+                android:id="@+id/showLevelSelectBtn"
                 android:src="@drawable/menu"
                 android:layout_margin="10dp"
                 />

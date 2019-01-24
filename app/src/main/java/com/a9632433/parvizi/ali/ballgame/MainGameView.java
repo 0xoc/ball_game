@@ -30,6 +30,7 @@ public class MainGameView extends View implements Serializable {
     private int noBalls;                        // number of initial balls
 
     private int level;                          // game level
+    private static int topLevel = 1;                   // top level
     private int score;                          // current score
 
     private boolean gameStarted = false;        // indicates whether the game is started or not
@@ -66,6 +67,7 @@ public class MainGameView extends View implements Serializable {
          balls =gameState.balls;
          collideBalls = gameState.collideBalls;
          player = gameState.player;
+         this.topLevel = gameState.topLevel;
          init();
     }
 
@@ -83,7 +85,7 @@ public class MainGameView extends View implements Serializable {
                 finalStatus,
                 elapsedTime,
                 false,
-                false);
+                false, this.topLevel);
         return state;
     }
 
@@ -146,6 +148,8 @@ public class MainGameView extends View implements Serializable {
         // randomly change players color every 5 seconds
         if (elapsedTime%5 == 0)
             player.color = new ARGBColor();
+
+
     }
 
     // initializer of random balls
@@ -193,6 +197,19 @@ public class MainGameView extends View implements Serializable {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
+        // check if game ended
+        // score >= 90 or no more balls left
+
+        if (score >= 90 || balls.size() - 1 == 0)
+        {
+            gameEnded = true;
+            finalStatus = true; // player won the level
+
+            if (level == topLevel)
+                topLevel++;         // increase the top level
+            return;
+        }
 
         // empty the collideBall array list
         collideBalls.clear();
@@ -307,4 +324,11 @@ public class MainGameView extends View implements Serializable {
     public boolean getFinalStatus() {return finalStatus; }
 
 
+    public int getLevel() {
+        return this.level;
+    }
+
+    public int getTopLevel(){
+        return this.topLevel;
+    }
 }
