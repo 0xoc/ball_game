@@ -1,0 +1,102 @@
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:weightSum="2"
+    >
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONGRATULATIONS"
+            android:layout_gravity="center"
+            android:textColor="#fff"
+            android:textSize="35sp"
+            />
+
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LEVEL"
+            android:textColor="#fff"
+
+            android:layout_gravity="center"
+            android:textSize="30sp"
+
+            />
+
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.40"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="6"
+            android:id="@+id/winLevelText"
+            android:layout_gravity="center"
+            android:textColor="#fff"
+
+            android:textSize="80sp"
+            />
+
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="COMPLETED"
+            android:layout_gravity="center"
+            android:textSize="30sp"
+            android:textColor="#fff"
+
+            />
+
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            >
+
+            <ImageButton
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="match_parent"
+                android:src="@drawable/menu"
+                android:id="@+id/winShowMenu"
+                android:background="@null"
+            />
+            <ImageButton
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:id="@+id/nextLevelBtn"
+                android:layout_height="match_parent"
+                android:src="@drawable/next"
+                android:background="@null"
+                />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

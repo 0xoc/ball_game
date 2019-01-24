@@ -155,7 +155,7 @@ public class MainGameView extends View implements Serializable {
     // initializer of random balls
     private void initRandomBalls() throws Exception{
         RandomBall.initCanvasDimensions(getWidth(), getHeight());
-
+        RandomBall.speedScaleFactor = level * 2;
         // generate noBalls random balls
         for (int i = 0; i < noBalls; i++)
             balls.add(new RandomBall());
@@ -205,6 +205,10 @@ public class MainGameView extends View implements Serializable {
         {
             gameEnded = true;
             finalStatus = true; // player won the level
+
+            // play win sound
+            MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.win);
+            mp.start();
 
             if (level == topLevel)
                 topLevel++;         // increase the top level

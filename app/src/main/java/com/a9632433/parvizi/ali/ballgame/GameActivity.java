@@ -63,23 +63,17 @@ public class GameActivity extends AppCompatActivity {
             FileInputStream fin = openFileInput("game.txt");
             ObjectInputStream iin = new ObjectInputStream(fin);
             GameState gameState = (GameState) iin.readObject();
-            //Toast.makeText(getApplicationContext(), gameState.balls.size() +"", Toast.LENGTH_SHORT).show();
 
             currentGame = new MainGameView(getApplicationContext(), gameState);
             iin.close();
             fin.close();
-            Toast.makeText(getApplicationContext(), "Done loading | top: " +currentGame.getTopLevel(), Toast.LENGTH_SHORT).show();
 
         } catch (FileNotFoundException e) {
-            Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         } catch (IOException e) {
-            Toast.makeText(getApplicationContext(), "IO exception", Toast.LENGTH_SHORT).show();
 
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            Toast.makeText(getApplicationContext(),"Class not found" , Toast.LENGTH_SHORT).show();
-
             e.printStackTrace();
         }
 
@@ -105,14 +99,9 @@ public class GameActivity extends AppCompatActivity {
             oout.writeObject(currentGame.getGameState());
             oout.close();
             fout.close();
-            Toast.makeText(getApplicationContext(), "State Saved | top lavel: " + currentGame.getGameState().topLevel, Toast.LENGTH_SHORT).show();
-
         } catch (FileNotFoundException e) {
-            Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         } catch (IOException e) {
-            Toast.makeText(getApplicationContext(), "IO exception", Toast.LENGTH_SHORT).show();
-
             e.printStackTrace();
         }
     }
@@ -128,7 +117,6 @@ public class GameActivity extends AppCompatActivity {
 
         // top avalibale game level, 0 if no game
         int topLevel = (currentGame == null)? 1 : currentGame.getTopLevel();
-        //Toast.makeText(getApplicationContext(), topLevel+ "", Toast.LENGTH_SHORT).show();
 
         // create the level selector list adapter
         ArrayAdapter adapter = new LevelSelectorListAdapter(getApplicationContext(),R.layout.level_select_item_layout, topLevel);
@@ -178,7 +166,7 @@ public class GameActivity extends AppCompatActivity {
         final TextView score = gameView.findViewById(R.id.score);                                  // game score text view
 
         if (level != -1)
-            currentGame = new MainGameView(this,10,level);                              // a game instance
+            currentGame = new MainGameView(this,10,level);                            // a game instance
 
 
         // add the game to the game container
@@ -203,19 +191,15 @@ public class GameActivity extends AppCompatActivity {
                         score.setText(String.format("%d", currentGame.getScore()));
 
                         if (currentGame.isGameEnded()){    // the game is finished
-                            if (!currentGame.getFinalStatus()) {   // if player lost the game
-                                // remove this game instance
-                                root.removeView(gameView);
-//
-                                // cancel this timer
-                                checker.cancel();
+                            // cancel this timer
+                            checker.cancel();
 
+                            if (!currentGame.getFinalStatus()) {   // if player lost the game
                                 // show lost page
                                 createLostPage();
 
-                                // show high score list
                             } else {    // if player won the game
-
+                                createWinLevelPage();
                             }
                         }
                     }
@@ -272,5 +256,48 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void createWinLevelPage(){
+        root.removeAllViews();
+
+        // inflate the win page
+        View winPage = layoutInflater.inflate(R.layout.game_win_layout, root, false);
+
+        // add it to root
+        root.addView(winPage);
+
+        // level text
+        TextView levelText = winPage.findViewById(R.id.winLevelText);
+
+        // set the level
+        levelText.setText(currentGame.getLevel() +"");
+
+        // show menu button
+        final ImageButton menu = winPage.findViewById(R.id.winShowMenu);
+
+        menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // remove the listener
+                menu.setOnClickListener(null);
+
+                createGameLevelSelector();
+            }
+        });
+
+        // next level
+        final ImageButton nextLevel = winPage.findViewById(R.id.nextLevelBtn);
+
+        nextLevel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // remove the click listener
+                nextLevel.setOnClickListener(null);
+
+                // initialize next level
+                createNewGameInstance(currentGame.getLevel() + 1);
+            }
+        });
     }
 }
