@@ -4,6 +4,8 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +30,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.Inflater;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements GameInitializer{
     LayoutInflater layoutInflater;
 
     // current score
@@ -39,6 +41,8 @@ public class GameActivity extends AppCompatActivity {
 
     // root view group
     ViewGroup root;
+
+    MediaPlayer mp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +108,10 @@ public class GameActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // stop mp any ways
+        if (mp != null)
+            mp.stop();
     }
 
     public void createGameLevelSelector(){
@@ -119,24 +127,18 @@ public class GameActivity extends AppCompatActivity {
         int topLevel = (currentGame == null)? 1 : currentGame.getTopLevel();
 
         // create the level selector list adapter
-        ArrayAdapter adapter = new LevelSelectorListAdapter(getApplicationContext(),R.layout.level_select_item_layout, topLevel);
+        RecyclerView.Adapter adapter = new LevelSelectorListAdapter(topLevel, this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+
 
         // handle to the list
-        ListView levelsList = levelSelectorView.findViewById(R.id.levelList);
+        RecyclerView levelsList = levelSelectorView.findViewById(R.id.levelList);
 
         // attach the adapter to it
         levelsList.setAdapter(adapter);
 
-        levelsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // delete this view from root
-                root.removeView(levelSelectorView);
-
-                // start new game with the level
-                createNewGameInstance(position + 1);
-            }
-        });
+        // attach layout manager
+        levelsList.setLayoutManager(layoutManager);
 
         ImageButton resumeGame = levelSelectorView.findViewById(R.id.resumeGameBtn);
 
@@ -172,6 +174,11 @@ public class GameActivity extends AppCompatActivity {
         // add the game to the game container
         gameContainer.addView(currentGame);
 
+        // play backgournd music
+        int id = (currentGame.getLevel() <= 5) ? R.raw.easy_level : R.raw.thriller;
+        mp = MediaPlayer.create(getApplicationContext(), id);
+        mp.start();
+
         // set level text
         TextView levelText = gameView.findViewById(R.id.level);
 
@@ -193,6 +200,12 @@ public class GameActivity extends AppCompatActivity {
                         if (currentGame.isGameEnded()){    // the game is finished
                             // cancel this timer
                             checker.cancel();
+
+                            // stop the sound
+                            mp.stop();
+
+                            // add the score
+                            currentGame.addScore(currentGame.getLevel());
 
                             if (!currentGame.getFinalStatus()) {   // if player lost the game
                                 // show lost page
@@ -226,6 +239,22 @@ public class GameActivity extends AppCompatActivity {
 
         // menu button
         final ImageButton showMenu = lostPage.findViewById(R.id.showLevelSelectBtn);
+
+
+        ArrayList<Integer> levelScores = new ArrayList<>();
+        int count = 20;
+        for (int i = 0; i < MainGameView.scores.size() && count > 0 ; i++ , count--){
+            if (MainGameView.scores.get(i).level == currentGame.getLevel())
+                levelScores.add(MainGameView.scores.get(i).score);
+        }
+
+        // high scores
+        RecyclerView highScoreList = lostPage.findViewById(R.id.highScoreListLosts);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.Adapter adapter = new HighScoresAdapter(levelScores);
+
+        highScoreList.setLayoutManager(layoutManager);
+        highScoreList.setAdapter(adapter);
 
 
         replayButton.setOnClickListener(new View.OnClickListener() {
@@ -299,5 +328,52 @@ public class GameActivity extends AppCompatActivity {
                 createNewGameInstance(currentGame.getLevel() + 1);
             }
         });
+    }
+
+    public void createHighLevelScorePage(int level){
+        root.removeAllViews();
+
+        // inflate the layout
+        View highScores = layoutInflater.inflate(R.layout.game_level_highscore, root,false);
+
+        // list of scores
+        ArrayList<Integer> levelScores = new ArrayList<>();
+
+
+        int count = 20;
+        for (int i = 0; i < MainGameView.scores.size() && count > 0 ; i++ , count--){
+            if (MainGameView.scores.get(i).level == level)
+                levelScores.add(MainGameView.scores.get(i).score);
+        }
+
+        // add to root
+        root.addView(highScores);
+
+        TextView levelText = highScores.findViewById(R.id.highScoreLevel);
+        RecyclerView highScoreList = highScores.findViewById(R.id.levelHighScores);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.Adapter adapter = new HighScoresAdapter(levelScores);
+
+        highScoreList.setLayoutManager(layoutManager);
+        highScoreList.setAdapter(adapter);
+
+        // menu button
+        ImageButton menu = highScores.findViewById(R.id.highScoreMenu);
+
+        menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createGameLevelSelector();
+            }
+        });
+
+        // level text
+        TextView levelTextView = highScores.findViewById(R.id.highScoreLevel);
+        levelTextView.setText(level + "");
+    }
+
+    @Override
+    public void initGame(int level) {
+        createNewGameInstance(level);
     }
 }

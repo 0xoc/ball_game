@@ -26,13 +26,12 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.5"
+        android:padding="20dp"
         >
 
-        <ListView
-            android:id="@+id/hightScoreList"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/highScoreListLosts"
             android:layout_width="match_parent"
-            android:layout_marginRight="20dp"
-            android:layout_marginLeft="20dp"
             android:layout_height="match_parent" />
     </FrameLayout>
 

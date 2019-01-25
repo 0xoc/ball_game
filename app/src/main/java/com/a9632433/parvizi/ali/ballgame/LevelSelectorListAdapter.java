@@ -1,37 +1,70 @@
 package com.a9632433.parvizi.ali.ballgame;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class LevelSelectorListAdapter extends ArrayAdapter {
+import static java.lang.System.exit;
+
+public class LevelSelectorListAdapter extends RecyclerView.Adapter<LevelSelectorListAdapter.ViewHolder> {
+
     private int topLevel;
-    private int layoutId;
-    public LevelSelectorListAdapter(@NonNull Context context, int resource, int topLevel) {
-        super(context, resource);
+    Context context;
+    GameInitializer initializer;
+
+    public LevelSelectorListAdapter(int topLevel, GameInitializer initializer) {
         this.topLevel = topLevel;
-        layoutId = resource;
-    }
-
-    @NonNull
-    @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        if (convertView == null)
-            convertView = LayoutInflater.from(getContext()).inflate(layoutId,parent,false);
-
-        TextView levelText = convertView.findViewById(R.id.levelText);
-        levelText.setText(position + 1 + "");
-
-        return convertView;
+        this.initializer = initializer;
     }
 
     @Override
-    public int getCount() {
+    public LevelSelectorListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View item = LayoutInflater.from(parent.getContext()).inflate(R.layout.level_select_item_layout, parent, false);
+
+        // save a refrance of parent context
+        this.context = parent.getContext();
+
+        return new ViewHolder(item);
+    }
+
+    @Override
+    public void onBindViewHolder(LevelSelectorListAdapter.ViewHolder holder, final int position) {
+        holder.levelText.setText(position + 1 + "");
+        holder.levelText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initializer.initGame(position+1);
+            }
+        });
+
+        holder.levelHighScore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initializer.createHighLevelScorePage(position+1);
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount() {
         return topLevel;
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+
+        public TextView levelText;
+        public ImageButton levelHighScore;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            levelText = itemView.findViewById(R.id.levelText);
+            levelHighScore = itemView.findViewById(R.id.levelHighScoreBtn);
+        }
     }
 }

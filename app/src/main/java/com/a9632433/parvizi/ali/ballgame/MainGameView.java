@@ -7,9 +7,13 @@ import android.media.MediaPlayer;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -23,6 +27,9 @@ public class MainGameView extends View implements Serializable {
     ArrayList<RandomBall> balls = new ArrayList<>();
     ArrayList<BallPair> collideBalls = new ArrayList<>();
     RandomBall player;
+
+    // all scores
+    public static ArrayList<GameScore> scores = new ArrayList<>();
 
     // paint to draw
     static Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -68,6 +75,8 @@ public class MainGameView extends View implements Serializable {
          collideBalls = gameState.collideBalls;
          player = gameState.player;
          this.topLevel = gameState.topLevel;
+         this.scores = gameState.scores;
+
          init();
     }
 
@@ -85,8 +94,29 @@ public class MainGameView extends View implements Serializable {
                 finalStatus,
                 elapsedTime,
                 false,
-                false, this.topLevel);
+                false, this.topLevel, scores);
         return state;
+    }
+
+    // add score
+    public void addScore(int level){
+        if (isGameEnded()){
+
+            boolean found = false;
+            for (int i = 0; i < scores.size();i++){
+                GameScore gs = scores.get(i);
+                if (gs.level == level && gs.score == score) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+                scores.add(new GameScore(this.level,score));
+
+            // sort by score
+            Collections.sort(scores,new GameScore.SortScoreByScore());
+        }
     }
 
     // main game initializer

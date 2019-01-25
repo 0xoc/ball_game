@@ -1,0 +1,68 @@
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    >
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.1"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="match_parent"
+            android:background="#393e46"
+            >
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.50"
+                android:text="HIGH SCORE"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:background="@drawable/right_round_orange"
+                />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:textSize="40sp"
+                android:text="26"
+                android:id="@+id/highScoreLevel"
+                android:layout_weight="0.30"
+                android:textColor="#fff"
+                android:gravity="center"
+                />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.7"
+        android:padding="20dp"
+        >
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/levelHighScores"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
+        >
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/menu"
+            android:background="@null"
+            android:id="@+id/highScoreMenu"
+            />
+    </FrameLayout>
+</LinearLayout>
