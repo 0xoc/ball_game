@@ -21,9 +21,9 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0.50"
-                android:text="HIGH SCORE"
+                android:text="LEVEL"
                 android:textColor="#fff"
-                android:textSize="20sp"
+                android:textSize="25sp"
                 android:gravity="center"
                 android:background="@drawable/right_round_orange"
                 />
